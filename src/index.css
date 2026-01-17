@@ -1,0 +1,5 @@
+body {
+  margin: 0;
+  overflow: hidden; /* Prevents scrollbars if canvas is slightly too big */
+  background-color: #222;
+}
