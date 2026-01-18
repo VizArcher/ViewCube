@@ -11,7 +11,7 @@ const ViewCube = () => {
         const width = 150;
         const height = 150;
 
-        // Creating scene - FIXED: capital S
+        // Creating scene
         const scene = new THREE.Scene();
 
         // Using Orthographic camera because view cube is a tool and doesn't need to be distorted
@@ -43,25 +43,8 @@ const ViewCube = () => {
             up: new THREE.Vector3(0, 1, 0)
         };
 
-        /*const unsubscribe = cameraState.subscribe((state, sourceId) => {
-            // If the update came from the cube itself (e.g. click), ignore it to prevent loops
-            if (sourceId === 'CUBE') return;
-
-            // Calculate relative offset from target
-            // V_rel = P_main - T_main
-            const offset = new THREE.Vector3().copy(state.position).sub(state.target);
-
-            // Normalize and scale to ViewCube distance (fixed at 10 units)
-            offset.normalize().multiplyScalar(10);
-
-            // Update local sync targets - FIXED: was "up", now "state.up"
-            syncState.position.copy(offset);
-            syncState.up.copy(state.up);
-        });*/
-
         const unsubscribe = cameraState.subscribe((state, sourceId) => {
-            // FIXED: We allow 'ANIMATION' source ID to pass through
-            if (sourceId === 'CUBE') return; 
+            // if (sourceId === 'CUBE') return; 
 
             // Calculate relative offset from target (V_rel = P_main - T_main)
             const offset = new THREE.Vector3().copy(state.position).sub(state.target);
