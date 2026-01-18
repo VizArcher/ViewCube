@@ -26,11 +26,11 @@ export class CubeInteraction {
     onMouseUp(event) {
         if (this.isAnimating) return;
 
-        // 1. Drag Check
+        // Drag Check
         const dist = this.startMouse.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
         if (dist > 5) return; 
 
-        // 2. Raycast
+        // Raycast
         const rect = this.renderer.domElement.getBoundingClientRect();
         this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -41,9 +41,8 @@ export class CubeInteraction {
         if (intersects.length > 0) {
             const hit = intersects[0];
             
-            // 3. SMART DETECTION (CAD Style)
-            // Map the click point to a 3x3x3 grid (-1, 0, 1)
-            const threshold = 0.3; // 30% from center
+            // View click detection
+            const threshold = 0.3;
             const vector = new THREE.Vector3(0, 0, 0);
             const localPoint = hit.point;
 
@@ -56,7 +55,7 @@ export class CubeInteraction {
             if (localPoint.z > threshold) vector.z = 1;
             else if (localPoint.z < -threshold) vector.z = -1;
 
-            if (vector.lengthSq() === 0) return; // Clicked internal/center
+            if (vector.lengthSq() === 0) return;
 
             this.animateToView(vector);
         }
@@ -68,20 +67,12 @@ export class CubeInteraction {
         const targetDistance = 10;
         const targetPos = normal.clone().multiplyScalar(targetDistance);
         
-        // --- UP VECTOR LOGIC ---
-        /*let targetUp = new THREE.Vector3(0, 1, 0);
-        if (Math.abs(normal.y) > 0.7) {
-            targetUp.set(0, 0, -1);
-        }*/
-
         // Up Vector logic
         let targetUp = new THREE.Vector3(0, 1, 0);
-        
-        // For top/bottom faces (pure Y-axis views)
         if (Math.abs(normal.y) > 0.7) {
             targetUp.set(0, 0, -1);
-        } 
-        
+        }
+
         console.log(targetUp);
 
         const startState = cameraState.get();
@@ -103,10 +94,6 @@ export class CubeInteraction {
             // Interpolate
             const currentPos = new THREE.Vector3().lerpVectors(startPos, targetPos, ease);
             const currentUp = new THREE.Vector3().lerpVectors(startUp, targetUp, ease);
-
-            // We notify 'CUBE' (ourselves) so we don't ignore the update.
-            // But we use a special ID 'ANIMATION' so both ViewCube.jsx and ThreeScene.jsx
-            // know this is an active animation frame they MUST respect.
             
             console.log({ 
                 position: currentPos, 
@@ -122,7 +109,6 @@ export class CubeInteraction {
                 requestAnimationFrame(animateFrame);
             } else {
                 this.isAnimating = false;
-                // Final snap to ensure precision
                 cameraState.set({ 
                     position: targetPos, 
                     up: targetUp 

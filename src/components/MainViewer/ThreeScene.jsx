@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-// CHANGE 1: Import ArcballControls instead of OrbitControls
 import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
 import { cameraState } from '../../core/CameraState';
 
@@ -15,7 +14,6 @@ const ThreeScene = () => {
 
         const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
 
-        // Initialize with state defaults
         const initialState = cameraState.get();
         camera.position.copy(initialState.position);
         camera.up.copy(initialState.up);
@@ -42,12 +40,8 @@ const ThreeScene = () => {
         pointLight.position.set(10, 10, 10);
         scene.add(pointLight);
 
-        // --- CHANGE 2: SETUP ARCBALL CONTROLS ---
-        // Arcball allows free tumbling (no "Up" vector restriction)
-        // Note: We pass 'scene' as the 3rd argument (required for Arcball)
         const controls = new ArcballControls(camera, renderer.domElement, scene);
         
-        // Hide the Arcball "Gizmo" circles (visual clutter) if you want a clean view
         controls.setGizmosVisible(false); 
         
         controls.enableDamping = true;
@@ -75,13 +69,13 @@ const ThreeScene = () => {
             cameraState.set({
                 position: camera.position.clone(),
                 target: controls.target.clone(),
-                up: camera.up.clone() // Arcball changes 'up' frequently, so this is critical
+                up: camera.up.clone()
             }, 'VIEWER');
 
             console.log({
                 position: camera.position.clone(),
                 target: controls.target.clone(),
-                up: camera.up.clone() // Arcball changes 'up' frequently, so this is critical
+                up: camera.up.clone()
             })
         });
 

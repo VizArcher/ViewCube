@@ -11,13 +11,11 @@ const ViewCube = () => {
         const width = 150;
         const height = 150;
 
-        // Creating scene
         const scene = new THREE.Scene();
 
         // Using Orthographic camera because view cube is a tool and doesn't need to be distorted
         const camera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 100);
 
-        // Renderer
         const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -27,17 +25,49 @@ const ViewCube = () => {
             currentMount.appendChild(renderer.domElement);
         }
 
-        // Basic Cube
+        // Create text textures for faces
+        const createTextTexture = (text) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(0, 0, 128, 128);
+            
+            // Border
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(1, 1, 126, 126);
+            
+            // Text
+            ctx.fillStyle = '#333333';
+            ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 64, 64);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        };
+
+        // Materials for each face
+        const materials = [
+            new THREE.MeshBasicMaterial({ map: createTextTexture('R') }), // Right
+            new THREE.MeshBasicMaterial({ map: createTextTexture('L') }), // Left
+            new THREE.MeshBasicMaterial({ map: createTextTexture('T') }), // Top
+            new THREE.MeshBasicMaterial({ map: createTextTexture('B') }), // Bottom
+            new THREE.MeshBasicMaterial({ map: createTextTexture('F') }), // Front
+            new THREE.MeshBasicMaterial({ map: createTextTexture('K') })  // Back
+        ];
+
         const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-        const material = new THREE.MeshNormalMaterial();
-        const cube = new THREE.Mesh(geometry, material);
+        const cube = new THREE.Mesh(geometry, materials);
         scene.add(cube);
 
-        // Ensure cube is aligned with the world axes
         cube.rotation.set(0, 0, 0);
 
         // Sync Logic
-        // We update a local target vector to keep the animation loop clean
         const syncState = {
             position: new THREE.Vector3(0, 0, 10),
             up: new THREE.Vector3(0, 1, 0)
@@ -46,7 +76,6 @@ const ViewCube = () => {
         const unsubscribe = cameraState.subscribe((state, sourceId) => {
             // if (sourceId === 'CUBE') return; 
 
-            // Calculate relative offset from target (V_rel = P_main - T_main)
             const offset = new THREE.Vector3().copy(state.position).sub(state.target);
 
             // Normalize and scale to ViewCube distance (fixed at 10 units)
@@ -56,18 +85,15 @@ const ViewCube = () => {
             syncState.up.copy(state.up);
         });
 
-        // Animate - FIXED: variable naming consistency
         let animationId;
 
         const animate = () => {
             animationId = requestAnimationFrame(animate);
 
-            // This makes the cube appear to rotate "inversely" to the scene
             camera.position.copy(syncState.position);
             camera.up.copy(syncState.up);
-            camera.lookAt(0, 0, 0); // Always look at the center of the view cube scene
+            camera.lookAt(0, 0, 0); 
 
-            // FIXED: was "renderer.renderer", now "renderer.render"
             renderer.render(scene, camera);
         };
 
@@ -85,12 +111,14 @@ const ViewCube = () => {
                 currentMount.removeChild(renderer.domElement);
             }
             geometry.dispose();
-            material.dispose();
+            materials.forEach(mat => {
+                if (mat.map) mat.map.dispose();
+                mat.dispose();
+            });
             renderer.dispose();
         };
     }, []);
 
-    // Container CSS
     const style = {
         position: 'absolute',
         top: '10px',

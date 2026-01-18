@@ -16,7 +16,7 @@ class CameraState {
         return { ...this.state };
     }
 
-    // Updating the new state - from ThreeScene when user drags the mouse
+    // Updates the state
     set(newState, sourceID) {
         if (newState.position) this.state.position.copy(newState.position);
         if (newState.target) this.state.target.copy(newState.target);

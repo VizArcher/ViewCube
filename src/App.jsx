@@ -20,7 +20,6 @@ function App() {
                 pointerEvents: 'none',
                 opacity: 0.7
             }}>
-                <h3>PR 1: Three.js Integration</h3>
                 <p>• Drag background to orbit</p>
                 <p>• Click Cube faces to animate</p>
             </div>
