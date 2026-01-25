@@ -75,6 +75,7 @@ const ViewCube = () => {
 
         const unsubscribe = cameraState.subscribe((state, sourceId) => {
             // if (sourceId === 'CUBE') return; 
+            if (sourceId === 'TRAME') return; 
 
             const offset = new THREE.Vector3().copy(state.position).sub(state.target);
 

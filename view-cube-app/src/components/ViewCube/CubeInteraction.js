@@ -80,7 +80,7 @@ export class CubeInteraction {
         const startPos = startState.position.clone();
         const startUp = startState.up.clone();
         
-        const duration = 400;
+        const duration = 100;
         const startTime = performance.now();
         this.isAnimating = true;
 

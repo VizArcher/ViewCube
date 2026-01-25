@@ -558,7 +558,7 @@ const TrameViewer = () => {
 
 export default TrameViewer; */
 
-import { useEffect, useRef } from "react";
+/*import { useEffect, useRef } from "react";
 import { TrameIframeApp } from "@kitware/trame-react";
 
 export default function TrameViewer() {
@@ -567,11 +567,10 @@ export default function TrameViewer() {
   const onCommunicatorReady = (communicator) => {
     communicatorRef.current = communicator;
 
-    communicator.state.onReady(() => {
+    communicatorRef.current.state.onReady(() => {
       console.log("[React] Trame state ready");
 
-      communicator.state.watch(["camera"], (camera) => {
-        if (!camera) return;
+      communicatorRef.current.state.watch(["camera"], (camera) => {
         console.log("[React] Camera updated:", camera);
       });
     });
@@ -591,4 +590,313 @@ export default function TrameViewer() {
         />
     </div>
   );
+}*/
+
+/*
+import { useEffect, useRef } from "react";
+import { TrameIframeApp } from "@kitware/trame-react";
+import { cameraState } from "../../core/CameraState";
+import * as THREE from 'three';
+
+export default function TrameViewer() {
+  const communicatorRef = useRef(null);
+  const unsubscribeRef = useRef(null);
+
+  useEffect(() => {
+    // Subscribe to cameraState changes from ViewCube
+    unsubscribeRef.current = cameraState.subscribe((state, sourceId) => {
+      // Only send updates that came from ViewCube/Animation to Trame
+      if (sourceId === 'ANIMATION' && communicatorRef.current) {
+        const cameraData = {
+          position: [state.position.x, state.position.y, state.position.z],
+          target: [state.target.x, state.target.y, state.target.z],
+          up: [state.up.x, state.up.y, state.up.z]
+        };
+        
+        console.log("[React] Sending camera to Trame:", cameraData);
+        
+        try {
+          communicatorRef.current.state.set("react_camera", cameraData);
+          console.log("[React] ✅ Camera sent via state");
+        } catch (error) {
+          console.error("[React] ❌ Failed to send camera:", error);
+        }
+      }
+    });
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, []);
+
+  const onCommunicatorReady = (communicator) => {
+    communicatorRef.current = communicator;
+    console.log("[React] Communicator ready");
+
+    communicatorRef.current.state.onReady(() => {
+      console.log("[React] Trame state ready");
+
+      // Watch for camera changes from Trame (user interaction in VTK view)
+      communicatorRef.current.state.watch(["camera"], (camera) => {
+        if (!camera) return;
+        
+        console.log("[React] Camera updated from Trame:", camera);
+        
+        // Convert Trame camera to ThreeJS format and update cameraState
+        const position = new THREE.Vector3(
+          camera.position[0],
+          camera.position[1],
+          camera.position[2]
+        );
+        const target = new THREE.Vector3(
+          camera.focalPoint[0],
+          camera.focalPoint[1],
+          camera.focalPoint[2]
+        );
+        const up = new THREE.Vector3(
+          camera.viewUp[0],
+          camera.viewUp[1],
+          camera.viewUp[2]
+        );
+
+        // Update shared state with 'TRAME' source to prevent loops
+        cameraState.set({ position, target, up }, 'TRAME');
+      });
+    });
+  };
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+        <TrameIframeApp
+            iframeId="trame-viewer"
+            url="http://localhost:8080"
+            onCommunicatorReady={onCommunicatorReady}
+            style={{
+                width: '100%',
+                height: '100%',
+                border: 'none'
+            }}
+        />
+    </div>
+  );
+}*/
+
+/* eslint-disable react/prop-types */
+import React, { useState, useEffect, useRef } from 'react';
+import { TrameIframeApp } from '@kitware/trame-react';
+import {
+  Button,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+  Slider,
+  Switch,
+} from '@patternfly/react-core';
+import { cameraState } from '../../core/CameraState';
+
+function debounce(func, wait) {
+  let timeout;
+
+  return function (...args) {
+    const context = this;
+
+    clearTimeout(timeout); // Clears the previous timeout
+    timeout = setTimeout(() => func.apply(context, args), wait); // Sets a new timeout
+  };
 }
+
+function deepEqual(obj1, obj2) {
+  if (obj1 === obj2) return true;
+  if (
+    typeof obj1 !== 'object' ||
+    obj1 === null ||
+    typeof obj2 !== 'object' ||
+    obj2 === null
+  )
+    return false;
+
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) return false;
+
+  for (let key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function stateIsSync(localState, trameState) {
+  const localStateKeys = Object.keys(localState);
+  const trameStatekeys = Object.keys(trameState);
+
+  for (let localKey of localStateKeys) {
+    if (
+      !trameStatekeys.includes(localKey) ||
+      !deepEqual(localState[localKey], trameState[localKey])
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+const Viewer = ({ viewerId, url }) => {
+  const trameCommunicator = useRef(null);
+  const synchronizeTrameState = useRef(null);
+
+  const [viewerState, setViewerState] = useState({
+    resolution: 20,
+    interaction_mode: 'interact',
+  });
+
+  useEffect(() => {
+    synchronizeTrameState.current = debounce((viewerState) => {
+      if (!trameCommunicator.current) {
+        return;
+      }
+
+      trameCommunicator.current.state.get().then((trame_state) => {
+        if (!stateIsSync(viewerState, trame_state)) {
+          trameCommunicator.current.state.update(viewerState);
+        }
+      });
+    }, 25);
+  }, []);
+
+  useEffect(() => {
+    synchronizeTrameState.current(viewerState);
+  }, [viewerState]);
+
+  const resetCamera = () => {
+    console.debug('resetting camera');
+    trameCommunicator.current.trigger('raise_error').catch((err) => {
+      throw err;
+    });
+    trameCommunicator.current.trigger('reset_camera');
+  };
+
+  const resetResolution = () => {
+    console.debug('resetting resolution');
+    trameCommunicator.current.trigger('reset_resolution');
+  };
+
+  cameraState.subscribe((state, sourceId) => { 
+        if(sourceId === 'VIEWER') return;
+
+        const cameraData = {
+          position: [state.position.x, state.position.y, state.position.z],
+          target: [state.target.x, state.target.y, state.target.z],
+          up: [state.up.x, state.up.y, state.up.z]
+        };
+        console.log(cameraData.position[0])
+        trameCommunicator.current.trigger('reset_resolution', [cameraData.position, cameraData.target, cameraData.up]);
+   });
+
+
+  const onViewerReady = (comm) => {
+    trameCommunicator.current = comm;
+
+    trameCommunicator.current.state.onReady(() => {
+      trameCommunicator.current.state.watch(
+        ['interactor_settings'],
+        (interactor_settings) => {
+          console.log({ interactor_settings });
+        }
+      );
+
+      trameCommunicator.current.state.watch(
+        ['resolution', 'interaction_mode'],
+        (resolution, interaction_mode) => {
+          setViewerState((prevState) => ({
+            ...prevState,
+            resolution,
+            interaction_mode,
+          }));
+        }
+      );
+
+      trameCommunicator.current.state.watch(
+        ['camera_position', 'camera_target', 'camera_up'],
+        (camera_position, camera_target, camera_up) => {
+            console.log({camera_position, camera_target, camera_up});
+        }
+      );
+    });
+  };
+
+  return (
+    <div className="viewer"  style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <Toolbar style={{ height: '10%' }}>
+        <ToolbarContent>
+          <ToolbarItem>
+            <div style={{ minWidth : '200px' }}>
+              <Slider
+                min={3}
+                max={60}
+                step={1}
+                inputLabel="resolution"
+                value={viewerState.resolution}
+                onChange={(e, res) => {
+                  setViewerState((prevViewerState) => ({
+                    ...prevViewerState,
+                    resolution: res,
+                  }));
+                }}
+              />
+            </div>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button variant="primary" onClick={resetCamera}>
+              Reset Camera
+            </Button>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button variant="primary" onClick={resetResolution}>
+              Reset Resolution
+            </Button>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button
+              variant="primary"
+              onClick={() =>
+                trameCommunicator.current
+                  .trigger('get_number_of_cells')
+                  .then(console.log)
+              }
+            >
+              Get Number Of Cells
+            </Button>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Switch
+              label={viewerState.interaction_mode}
+              isChecked={viewerState.interaction_mode === 'select'}
+              onChange={(e, checked) => {
+                setViewerState((prevViewerState) => ({
+                  ...prevViewerState,
+                  interaction_mode: checked ? 'select' : 'interact',
+                }));
+              }}
+            />
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
+
+      <TrameIframeApp
+        style={{ height: '80%',}}
+        iframeId={viewerId}
+        url={url}
+        onCommunicatorReady={onViewerReady}
+      />
+    </div>
+  );
+};
+
+export default Viewer;
