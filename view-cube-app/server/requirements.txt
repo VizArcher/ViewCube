@@ -2,3 +2,4 @@ trame
 trame-vuetify
 trame-vtk
 vtk
+trame-iframe

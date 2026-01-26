@@ -150,7 +150,7 @@ with SinglePageLayout(server) as layout:
     layout.title.set_text("VTK Mouse Events")
     
     with layout.content:
-        iframe.Communicator(target_origin="*", enable_rpc=True)
+        iframe.Communicator(target_origin="http://localhost:5173", enable_rpc=True)
 
         with vuetify3.VContainer(fluid=True, classes="fill-height pa-0"):
             view = vtk_widgets.VtkRemoteView(renwin)
