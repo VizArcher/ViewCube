@@ -53,7 +53,7 @@ function App() {
     return (
         <div>
             {/* The Main Viewer (Background) */}
-            <TrameViewer className="full-height" url="https://viewcube.onrender.com" viewerId="viewer1" />
+            <TrameViewer className="full-height" url="http://localhost:8080/" viewerId="viewer1" />
 
             {/* The UI Overplay (Foreground) */}
             <ViewCube />
