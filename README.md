@@ -28,7 +28,7 @@ Includes:
 **Live Demo:**
 [https://viewcubetrame.vercel.app/](https://viewcubetrame.vercel.app/)
 
-⚠️ Note: The deployed version has high latency due to renderer integration and production configuration. A demo video is provided for smoother visualization.
+⚠️ Note: The deployed version has high latency due to renderer integration and production configuration. A demo video is provided below for smoother visualization.
 
 Includes:
 
@@ -104,31 +104,6 @@ This required:
 
 ---
 
-## 🏗 Architecture
-
-```
-src/
- ├── scene/
- │    ├── sceneSetup.js
- │    ├── cameraConfig.js
- │
- ├── viewcube/
- │    ├── cubeBuilder.js
- │    ├── interactionHandler.js
- │    ├── orientationMap.js
- │
- ├── animation/
- │    ├── transitionController.js
- │
- ├── renderer/
- │    ├── threeRenderer.js
- │    ├── trameRenderer.js (PR2)
- │
- └── main.js
-```
-
----
-
 ## ⚙️ Technical Stack
 
 * Three.js
@@ -148,7 +123,7 @@ src/
 
 ---
 
-## 📹 Demo Video (PR2)
+## 📹 Demo Video (Level 2)
 
 Since the deployed PR2 instance has high latency,
 a demo video demonstrating stable transitions and interactions is attached here:
@@ -177,3 +152,4 @@ If you're building:
 * Engineering visualization software
 
 I’d be happy to discuss architectural decisions and implementation details.
+
