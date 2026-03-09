@@ -10,7 +10,7 @@ This project focuses on mathematically correct camera transitions, orientation c
 
 ### ✅ Level 1 – Core ViewCube + Camera Orientation
 
-**Live Demo:**
+**Deployed Version:**
 [https://view-cube.vercel.app/](https://view-cube.vercel.app/)
 
 Includes:
@@ -25,7 +25,9 @@ Includes:
 
 ### 🚀 Level 2 – Extended Interaction + Trame Integration (WIP)
 
-**Live Demo:**
+👉 [Watch the demo video](https://drive.google.com/file/d/13PKWiVd3Oz3DIJT2Axo4rVyPvNrkRRe7/view?usp=sharing)
+
+**Deployed Version:**
 [https://viewcubetrame.vercel.app/](https://viewcubetrame.vercel.app/)
 
 ⚠️ Note: The deployed version has high latency due to renderer integration and production configuration. A demo video is provided below for smoother visualization.
@@ -152,4 +154,5 @@ If you're building:
 * Engineering visualization software
 
 I’d be happy to discuss architectural decisions and implementation details.
+
 
